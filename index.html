@@ -1,0 +1,224 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mestre da Geometria: O Desafio do Robô</title>
+    <style>
+        :root { --primary: #3498db; --success: #27ae60; --dark: #2c3e50; --bg: #ecf0f1; }
+        body { font-family: sans-serif; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; background: var(--dark); }
+        
+        #canvas-container { 
+            position: relative; flex: 1.2; background-color: #fff;
+            background-image: linear-gradient(rgba(52,152,219,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(52,152,219,0.1) 1px, transparent 1px);
+            background-size: 20px 20px; border-bottom: 5px solid #34495e; 
+        }
+        canvas { width: 100%; height: 100%; display: block; }
+
+        #container-avatar { position: absolute; bottom: 15px; right: 15px; display: flex; flex-direction: column; align-items: flex-end; z-index: 20; pointer-events: none; }
+        #balao-msg { 
+            background: white; border: 3px solid var(--primary); padding: 8px 12px; border-radius: 12px; 
+            margin-bottom: 8px; font-weight: bold; color: var(--dark); max-width: 180px; font-size: 13px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: none; position: relative;
+        }
+        #balao-msg::after { content: ''; position: absolute; bottom: -10px; right: 15px; border-width: 10px 10px 0; border-style: solid; border-color: var(--primary) transparent; }
+
+        #avatar { 
+            width: 60px; height: 60px; background: var(--primary); border-radius: 12px; 
+            border: 3px solid var(--dark); position: relative; transition: all 0.3s;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .olhos { display: flex; gap: 10px; }
+        .olho { width: 10px; height: 10px; background: white; border-radius: 50%; transition: all 0.2s; }
+        .boca { position: absolute; bottom: 10px; width: 25px; height: 8px; border-bottom: 3px solid white; border-radius: 50%; }
+
+        .anim-pula { animation: pula 0.4s ease; }
+        @keyframes pula { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .pisca { height: 2px !important; margin-top: 4px; }
+        .triste { border-radius: 0; border-bottom: none; border-top: 3px solid white; bottom: 8px !important; }
+
+        #hud-nivel { position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 12px; border: 2px solid var(--primary); z-index: 10; min-width: 180px; }
+        #interface { flex: 1; background: var(--bg); display: flex; flex-direction: column; padding: 8px; gap: 5px; box-sizing: border-box; }
+        .gaveta { display: flex; gap: 6px; overflow-x: auto; padding: 5px 0; -webkit-overflow-scrolling: touch; }
+        .bloco { padding: 12px 15px; border-radius: 8px; color: white; font-weight: bold; border: none; white-space: nowrap; box-shadow: 0 3px 0 rgba(0,0,0,0.1); font-size: 13px; }
+        .btn-mov { background: var(--primary); }
+        .btn-giro { background: #f1c40f; color: #333; }
+        .btn-run { flex: 2; background: var(--success); color: white; border-radius: 10px; font-size: 18px; font-weight: bold; border: none; }
+        
+        /* AJUSTE AQUI: Limitei o tamanho da lista para não empurrar os botões */
+        #lista-comandos { flex: 1; max-height: 120px; background: #fff; border-radius: 8px; padding: 10px; overflow-y: auto; border: 1px solid #bdc3c7; font-family: monospace; }
+        
+        option:disabled { color: #ccc; text-decoration: line-through; }
+    </style>
+</head>
+<body>
+
+<div id="canvas-container">
+    <div id="hud-nivel">
+        <div id="progresso-estrelas" style="color:#f1c40f; font-size:14px">⭐☆☆☆☆☆☆☆☆☆</div>
+        <b id="txt-nome-nivel" style="font-size:16px">Nível 1</b><br>
+        <small id="txt-dica" style="color:#666"></small>
+    </div>
+
+    <div id="container-avatar">
+        <div id="balao-msg"></div>
+        <div id="avatar">
+            <div class="olhos"><div class="olho" id="olho-esq"></div><div class="olho" id="olho-dir"></div></div>
+            <div class="boca" id="boca"></div>
+        </div>
+    </div>
+    <canvas id="mesaDesenho"></canvas>
+</div>
+
+<div id="interface">
+    <select id="select-nivel" onchange="mudarNivel(this.value)" style="width:100%; padding:10px; border-radius:8px; font-weight:bold; margin-bottom:5px;">
+        <option value="1">1. Quadrado</option>
+        <option value="2" disabled>2. Triângulo</option>
+        <option value="3" disabled>3. Pentágono</option>
+        <option value="4" disabled>4. Hexágono</option>
+        <option value="5" disabled>5. Estrela (5p)</option>
+        <option value="6" disabled>6. Círculo</option>
+        <option value="7" disabled>7. Cubo 3D</option>
+        <option value="8" disabled>8. Pirâmide 3D</option>
+        <option value="9" disabled>9. Escada 3D</option>
+        <option value="10" disabled>10. Cubo Mestre</option>
+    </select>
+
+    <div class="gaveta">
+        <button class="bloco btn-mov" onclick="addComando('avancar', 80)">➡ 80</button>
+        <button class="bloco btn-mov" onclick="addComando('avancar', 40)">➡ 40</button>
+        <button class="bloco btn-giro" onclick="addComando('girar', 90)">⟳ 90°</button>
+        <button class="bloco btn-giro" onclick="addComando('girar', 120)">⟳ 120°</button>
+        <button class="bloco btn-giro" onclick="addComando('girar', 60)">⟳ 60°</button>
+        <button class="bloco btn-giro" onclick="addComando('girar', 72)">⟳ 72°</button>
+        <button class="bloco btn-giro" onclick="addComando('girar', 144)">⟳ 144°</button>
+        <button class="bloco" onclick="abrirMenuLoop()" style="background:#e67e22">🔁 LOOP</button>
+        <button class="bloco" id="btn-fim" onclick="fecharLoop()" style="display:none; background:#d35400">🏁 FIM</button>
+    </div>
+
+    <div id="lista-comandos"></div>
+
+    <div style="display:flex; gap:10px; height:50px; margin-top: 5px;">
+        <button class="bloco" style="flex:1; background:#e74c3c" onclick="limparScript()">LIMPAR</button>
+        <button class="btn-run" onclick="rodarAlgoritmo()">EXECUTAR</button>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('mesaDesenho');
+    const ctx = canvas.getContext('2d');
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const avatar = {
+        falar: (msg) => {
+            const b = document.getElementById('balao-msg');
+            b.innerText = msg; b.style.display = 'block';
+            setTimeout(() => b.style.display = 'none', 3000);
+        },
+        reagir: (t) => {
+            const av = document.getElementById('avatar'), oD = document.getElementById('olho-dir'), bo = document.getElementById('boca');
+            av.classList.remove('anim-pula'); oD.classList.remove('pisca'); bo.classList.remove('triste');
+            if(t==='sucesso') { av.classList.add('anim-pula'); oD.classList.add('pisca'); avatar.falar("Incrível! Próximo nível liberado! 🌟"); }
+            if(t==='erro') { bo.classList.add('triste'); avatar.falar("Humm... Quase lá! Tente de novo! 🤔"); }
+        }
+    };
+
+    function som(f1, f2, d) {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.frequency.setValueAtTime(f1, audioCtx.currentTime);
+        if(f2) o.frequency.exponentialRampToValueAtTime(f2, audioCtx.currentTime+d);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+d);
+        o.start(); o.stop(audioCtx.currentTime+d);
+    }
+
+    let nivelAberto = 1, nivelAtual = 1, algoritmo = [], loopTemporario = null, cursor = {x:0, y:0, ang:0}, executando = false;
+
+    const DESAFIOS = {
+        1: { n: "Quadrado", d: "4x: Avançar 80, Girar 90°", r: (c,x,y) => c.strokeRect(x-40, y-40, 80, 80) },
+        2: { n: "Triângulo", d: "3x: Avançar 80, Girar 120°", r: (c,x,y) => { c.beginPath(); c.moveTo(x,y-45); c.lineTo(x+50,y+35); c.lineTo(x-50,y+35); c.closePath(); c.stroke(); }},
+        3: { n: "Pentágono", d: "5x: Avançar 80, Girar 72°", r: (c,x,y) => { c.beginPath(); for(let i=0;i<5;i++){ let a=(i*72-90)*Math.PI/180; c.lineTo(x+55*Math.cos(a), y+55*Math.sin(a)); } c.closePath(); c.stroke(); }},
+        4: { n: "Hexágono", d: "6x: Avançar 40, Girar 60°", r: (c,x,y) => { c.beginPath(); for(let i=0;i<6;i++){ let a=i*60*Math.PI/180; c.lineTo(x+50*Math.cos(a), y+50*Math.sin(a)); } c.closePath(); c.stroke(); }},
+        5: { n: "Estrela", d: "5x: Avançar 80, Girar 144°", r: (c,x,y) => { c.beginPath(); let a=-Math.PI/2; for(let i=0;i<5;i++){ c.lineTo(x+60*Math.cos(a), y+60*Math.sin(a)); a+=144*Math.PI/180; } c.closePath(); c.stroke(); }},
+        6: { n: "Círculo", d: "Loop 36x: Avançar 10, Girar 10°", r: (c,x,y) => { c.beginPath(); c.arc(x,y,55,0,Math.PI*2); c.stroke(); }},
+        7: { n: "Cubo 3D", d: "3x Losangos (Isométrico)", r: (c,x,y) => { 
+            const l=(ax,ay,an)=>{ c.beginPath(); c.moveTo(ax,ay); let rad=an*Math.PI/180;
+            let p1x=ax+50*Math.cos(rad-30*Math.PI/180), p1y=ay+50*Math.sin(rad-30*Math.PI/180); c.lineTo(p1x,p1y);
+            let p2x=p1x+50*Math.cos(rad+30*Math.PI/180), p2y=p1y+50*Math.sin(rad+30*Math.PI/180); c.lineTo(p2x,p2y);
+            let p3x=p2x+50*Math.cos(rad+150*Math.PI/180), p3y=p2y+50*Math.sin(rad+150*Math.PI/180); c.lineTo(p3x,p3y); c.closePath(); c.stroke(); }
+            l(x,y,0); l(x,y,120); l(x,y,240);
+        }},
+        8: { n: "Pirâmide", d: "Base e 3 faces", r: (c,x,y) => { c.beginPath(); c.moveTo(x,y-50); c.lineTo(x+40,y+20); c.lineTo(x-40,y+20); c.closePath(); c.lineTo(x,y+50); c.lineTo(x+40,y+20); c.stroke(); }},
+        9: { n: "Escada 3D", d: "Degraus repetidos", r: (c,x,y) => { c.beginPath(); c.moveTo(x-60,y+40); for(let i=0;i<3;i++){ c.lineTo(c.x+30,c.y-15); c.lineTo(c.x,c.y+20); } c.stroke(); }},
+        10: { n: "Cubo Mestre", d: "O desafio final!", r: (c,x,y) => { c.font="14px Arial"; c.strokeText("DESAFIO FINAL", x-50,y); c.strokeRect(x-40,y-40,80,80); }}
+    };
+
+    function init() {
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = canvas.offsetWidth * dpr; canvas.height = canvas.offsetHeight * dpr;
+        ctx.scale(dpr, dpr); mudarNivel(1);
+    }
+
+    function mudarNivel(v) {
+        nivelAtual = parseInt(v);
+        document.getElementById('txt-nome-nivel').innerText = "Nível " + nivelAtual + ": " + DESAFIOS[nivelAtual].n;
+        document.getElementById('txt-dica').innerText = DESAFIOS[nivelAtual].d;
+        let s=""; for(let i=1;i<=10;i++) s+=(i<=nivelAberto)?"⭐":"☆";
+        document.getElementById('progresso-estrelas').innerText=s;
+        limparScript();
+    }
+
+    function resetDesenho() {
+        const w=canvas.width/window.devicePixelRatio, h=canvas.height/window.devicePixelRatio;
+        ctx.clearRect(0,0,w,h); cursor={x:w/2, y:h/2, ang:0};
+        ctx.save(); ctx.setLineDash([5,5]); ctx.strokeStyle="rgba(0,0,0,0.2)";
+        DESAFIOS[nivelAtual].r(ctx, cursor.x, cursor.y); ctx.restore();
+        ctx.fillStyle="red"; ctx.beginPath(); ctx.arc(cursor.x, cursor.y, 5, 0, Math.PI*2); ctx.fill();
+    }
+
+    function addComando(t, v) { if(!executando){ som(300,0,0.05); if(loopTemporario) loopTemporario.comandos.push({t,v}); else algoritmo.push({t,v}); renderizarLista(); }}
+    function abrirMenuLoop() { const v=prompt("Vezes?","4"); if(v){ loopTemporario={t:'loop', vezes:parseInt(v), comandos:[]}; document.getElementById('btn-fim').style.display='inline-block'; }}
+    function fecharLoop() { if(loopTemporario){ algoritmo.push(loopTemporario); loopTemporario=null; document.getElementById('btn-fim').style.display='none'; renderizarLista(); } renderizarLista();}
+    function limparScript() { algoritmo=[]; loopTemporario=null; document.getElementById('btn-fim').style.display='none'; resetDesenho(); renderizarLista(); }
+
+    function renderizarLista() {
+        const ui=document.getElementById('lista-comandos'); ui.innerHTML="";
+        algoritmo.forEach(c => {
+            if(c.t==='loop'){ let h="<div style='background:#fff3e0;border-left:3px solid #e67e22;padding:2px;margin:2px'><b>Repetir "+c.vezes+"x</b>"; c.comandos.forEach(s=>h+="<div style='font-size:11px'>↳ "+s.t+" "+s.v+"</div>"); ui.innerHTML+=h+"</div>"; }
+            else ui.innerHTML+="<div style='padding:2px;border-bottom:1px solid #eee'>"+c.t.toUpperCase()+" "+c.v+"</div>";
+        });
+        ui.scrollTop = ui.scrollHeight; // Sempre rolar para o final
+    }
+
+    async function rodarAlgoritmo(lista=algoritmo) {
+        if(executando && lista===algoritmo) return;
+        if(lista===algoritmo) { executando=true; resetDesenho(); }
+        for(let c of lista){
+            if(c.t==='loop'){ for(let i=0;i<c.vezes;i++) await rodarAlgoritmo(c.comandos); }
+            else {
+                if(c.t==='avancar'){
+                    let r=cursor.ang*Math.PI/180, nx=cursor.x+c.v*Math.cos(r), ny=cursor.y+c.v*Math.sin(r);
+                    ctx.beginPath(); ctx.moveTo(cursor.x,cursor.y); ctx.lineTo(nx,ny); ctx.strokeStyle="#2c3e50"; ctx.lineWidth=3; ctx.stroke();
+                    cursor.x=nx; cursor.y=ny;
+                } else cursor.ang+=c.v;
+                await new Promise(r=>setTimeout(r,100));
+            }
+        }
+        if(lista===algoritmo){ executando=false; verificar(); }
+    }
+
+    function verificar() {
+        const w=canvas.width/window.devicePixelRatio, h=canvas.height/window.devicePixelRatio;
+        const d=Math.hypot(cursor.x-w/2, cursor.y-h/2);
+        if(d<30 && algoritmo.length>0){
+            som(440,880,0.5); avatar.reagir('sucesso');
+            if(nivelAtual===nivelAberto && nivelAberto<10){
+                nivelAberto++; document.getElementById('select-nivel').options[nivelAberto-1].disabled=false;
+            }
+        } else { som(200,100,0.3); avatar.reagir('erro'); }
+    }
+
+    window.addEventListener('load', () => setTimeout(init,500));
+</script>
+</body>
+</html>
