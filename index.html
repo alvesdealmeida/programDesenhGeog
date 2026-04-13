@@ -50,7 +50,7 @@
         
         option:disabled { color: #ccc; text-decoration: line-through; }
 
-        /* Estilo para a mini explicação */
+        /* Estilo para a mini explicação 
        .ajuda-rapida {
            background: #fff;
            border-left: 4px solid #f1c40f;
@@ -62,11 +62,65 @@
            color: #444;
        }
       .ajuda-rapida b { color: var(--dark); }
+        */
+    /* Botão de Dúvida Flutuante */
+.ajuda-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 30;
+}
+
+.btn-ajuda {
+    width: 30px;
+    height: 30px;
+    background: #f1c40f;
+    color: #2c3e50;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.balao-ajuda {
+    display: none;
+    position: absolute;
+    top: 35px;
+    right: 0;
+    background: white;
+    border: 2px solid #f1c40f;
+    padding: 10px;
+    width: 200px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    pointer-events: none; /* Evita atrapalhar cliques */
+}
+
+/* Mostra o balão ao passar o mouse ou segurar o toque */
+.ajuda-container:hover .balao-ajuda, 
+.ajuda-container:active .balao-ajuda {
+    display: block;
+}
     </style>
 </head>
 <body>
 
 <div id="canvas-container">
+    <div class="ajuda-container">
+        <div class="btn-ajuda">?</div>
+        <div class="balao-ajuda">
+            <b>Como Jogar:</b><br>
+            1. Use os botões ➡ para andar.<br>
+            2. Use ⟳ para girar o robô.<br>
+            3. 🔁 <b>Loop</b> repete ações.<br>
+            4. Clique em ▶️ <b>Executar</b> para ver o desenho!
+        </div>
     <div id="hud-nivel">
         <div id="progresso-estrelas" style="color:#f1c40f; font-size:14px">⭐☆☆☆☆☆☆☆☆☆</div>
         <b id="txt-nome-nivel" style="font-size:16px">Nível 1</b><br>
@@ -96,10 +150,11 @@
         <option value="9" disabled>9. Escada 3D</option>
         <option value="10" disabled>10. Cubo Mestre</option>
     </select>
+    <!--
     <div class="ajuda-rapida">
         <b>Como Jogar:</b> Escolha um desafio, use os botões azuis para andar e amarelos para girar. Use o 🔁 <b>Loop</b> para repetir movimentos! Clique em ▶️ <b>Executar</b> para ver o robô desenhar.
     </div>
-
+    -->
     <div class="gaveta">
         <button class="bloco btn-mov" onclick="addComando('avancar', 80)">➡ 80</button>
         <button class="bloco btn-mov" onclick="addComando('avancar', 40)">➡ 40</button>
