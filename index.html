@@ -15,6 +15,51 @@
         }
         canvas { width: 100%; height: 100%; display: block; }
 
+        /* Botão de Dúvida Flutuante */
+        .ajuda-container {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 100;
+        }
+
+        .btn-ajuda {
+            width: 32px;
+            height: 32px;
+            background: #f1c40f;
+            color: #2c3e50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            pointer-events: auto;
+        }
+
+        .balao-ajuda {
+            display: none;
+            position: absolute;
+            top: 38px;
+            right: 0;
+            background: white;
+            border: 2px solid #f1c40f;
+            padding: 10px;
+            width: 180px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 101;
+        }
+
+        .ajuda-container:hover .balao-ajuda, 
+        .ajuda-container:active .balao-ajuda {
+            display: block;
+        }
+
         #container-avatar { position: absolute; bottom: 15px; right: 15px; display: flex; flex-direction: column; align-items: flex-end; z-index: 20; pointer-events: none; }
         #balao-msg { 
             background: white; border: 3px solid var(--primary); padding: 8px 12px; border-radius: 12px; 
@@ -41,72 +86,11 @@
         #interface { flex: 1; background: var(--bg); display: flex; flex-direction: column; padding: 8px; gap: 5px; box-sizing: border-box; }
         .gaveta { display: flex; gap: 6px; overflow-x: auto; padding: 5px 0; -webkit-overflow-scrolling: touch; }
         .bloco { padding: 12px 15px; border-radius: 8px; color: white; font-weight: bold; border: none; white-space: nowrap; box-shadow: 0 3px 0 rgba(0,0,0,0.1); font-size: 13px; }
-        .btn-mov { background: var(--primary); }
-        .btn-giro { background: #f1c40f; color: #333; }
         .btn-run { flex: 2; background: var(--success); color: white; border-radius: 10px; font-size: 18px; font-weight: bold; border: none; }
         
-        /* AJUSTE AQUI: Limitei o tamanho da lista para não empurrar os botões */
-        #lista-comandos { flex: 1; max-height: 120px; background: #fff; border-radius: 8px; padding: 10px; overflow-y: auto; border: 1px solid #bdc3c7; font-family: monospace; }
+        #lista-comandos { flex: 1; max-height: 110px; background: #fff; border-radius: 8px; padding: 10px; overflow-y: auto; border: 1px solid #bdc3c7; font-family: monospace; }
         
         option:disabled { color: #ccc; text-decoration: line-through; }
-
-        /* Estilo para a mini explicação 
-       .ajuda-rapida {
-           background: #fff;
-           border-left: 4px solid #f1c40f;
-           padding: 8px;
-           margin-bottom: 5px;
-           border-radius: 4px;
-           font-size: 11px;
-           line-height: 1.4;
-           color: #444;
-       }
-      .ajuda-rapida b { color: var(--dark); }
-        */
-    /* Botão de Dúvida Flutuante */
-.ajuda-container {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 30;
-}
-
-.btn-ajuda {
-    width: 30px;
-    height: 30px;
-    background: #f1c40f;
-    color: #2c3e50;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    cursor: pointer;
-    border: 2px solid #fff;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-.balao-ajuda {
-    display: none;
-    position: absolute;
-    top: 35px;
-    right: 0;
-    background: white;
-    border: 2px solid #f1c40f;
-    padding: 10px;
-    width: 200px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: #333;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    pointer-events: none; /* Evita atrapalhar cliques */
-}
-
-/* Mostra o balão ao passar o mouse ou segurar o toque */
-.ajuda-container:hover .balao-ajuda, 
-.ajuda-container:active .balao-ajuda {
-    display: block;
-}
     </style>
 </head>
 <body>
@@ -116,11 +100,13 @@
         <div class="btn-ajuda">?</div>
         <div class="balao-ajuda">
             <b>Como Jogar:</b><br>
-            1. Use os botões ➡ para andar.<br>
-            2. Use ⟳ para girar o robô.<br>
+            1. Use ➡ para andar.<br>
+            2. Use ⟳ para girar.<br>
             3. 🔁 <b>Loop</b> repete ações.<br>
-            4. Clique em ▶️ <b>Executar</b> para ver o desenho!
+            4. Clique em ▶️ <b>Executar</b>!
         </div>
+    </div>
+
     <div id="hud-nivel">
         <div id="progresso-estrelas" style="color:#f1c40f; font-size:14px">⭐☆☆☆☆☆☆☆☆☆</div>
         <b id="txt-nome-nivel" style="font-size:16px">Nível 1</b><br>
@@ -150,26 +136,20 @@
         <option value="9" disabled>9. Escada 3D</option>
         <option value="10" disabled>10. Cubo Mestre</option>
     </select>
-    <!--
-    <div class="ajuda-rapida">
-        <b>Como Jogar:</b> Escolha um desafio, use os botões azuis para andar e amarelos para girar. Use o 🔁 <b>Loop</b> para repetir movimentos! Clique em ▶️ <b>Executar</b> para ver o robô desenhar.
-    </div>
-    -->
+
     <div class="gaveta">
-        <button class="bloco btn-mov" onclick="addComando('avancar', 80)">➡ 80</button>
-        <button class="bloco btn-mov" onclick="addComando('avancar', 40)">➡ 40</button>
-        <button class="bloco btn-giro" onclick="addComando('girar', 90)">⟳ 90°</button>
-        <button class="bloco btn-giro" onclick="addComando('girar', 120)">⟳ 120°</button>
-        <button class="bloco btn-giro" onclick="addComando('girar', 60)">⟳ 60°</button>
-        <button class="bloco btn-giro" onclick="addComando('girar', 72)">⟳ 72°</button>
-        <button class="bloco btn-giro" onclick="addComando('girar', 144)">⟳ 144°</button>
+        <button class="bloco" onclick="addComando('avancar', 80)" style="background:#3498db">➡ 80</button>
+        <button class="bloco" onclick="addComando('avancar', 40)" style="background:#3498db">➡ 40</button>
+        <button class="bloco" onclick="addComando('girar', 90)" style="background:#f1c40f; color:#333">⟳ 90°</button>
+        <button class="bloco" onclick="addComando('girar', 120)" style="background:#f1c40f; color:#333">⟳ 120°</button>
+        <button class="bloco" onclick="addComando('girar', 60)" style="background:#f1c40f; color:#333">⟳ 60°</button>
         <button class="bloco" onclick="abrirMenuLoop()" style="background:#e67e22">🔁 LOOP</button>
         <button class="bloco" id="btn-fim" onclick="fecharLoop()" style="display:none; background:#d35400">🏁 FIM</button>
     </div>
 
     <div id="lista-comandos"></div>
 
-    <div style="display:flex; gap:10px; height:50px; margin-top: 5px;">
+    <div style="display:flex; gap:10px; height:45px; margin-top: 5px;">
         <button class="bloco" style="flex:1; background:#e74c3c" onclick="limparScript()">LIMPAR</button>
         <button class="btn-run" onclick="rodarAlgoritmo()">EXECUTAR</button>
     </div>
@@ -212,7 +192,7 @@
         4: { n: "Hexágono", d: "6x: Avançar 40, Girar 60°", r: (c,x,y) => { c.beginPath(); for(let i=0;i<6;i++){ let a=i*60*Math.PI/180; c.lineTo(x+50*Math.cos(a), y+50*Math.sin(a)); } c.closePath(); c.stroke(); }},
         5: { n: "Estrela", d: "5x: Avançar 80, Girar 144°", r: (c,x,y) => { c.beginPath(); let a=-Math.PI/2; for(let i=0;i<5;i++){ c.lineTo(x+60*Math.cos(a), y+60*Math.sin(a)); a+=144*Math.PI/180; } c.closePath(); c.stroke(); }},
         6: { n: "Círculo", d: "Loop 36x: Avançar 10, Girar 10°", r: (c,x,y) => { c.beginPath(); c.arc(x,y,55,0,Math.PI*2); c.stroke(); }},
-        7: { n: "Cubo 3D", d: "3x Losangos (Isométrico)", r: (c,x,y) => { 
+        7: { n: "Cubo 3D", d: "3x Losangos", r: (c,x,y) => { 
             const l=(ax,ay,an)=>{ c.beginPath(); c.moveTo(ax,ay); let rad=an*Math.PI/180;
             let p1x=ax+50*Math.cos(rad-30*Math.PI/180), p1y=ay+50*Math.sin(rad-30*Math.PI/180); c.lineTo(p1x,p1y);
             let p2x=p1x+50*Math.cos(rad+30*Math.PI/180), p2y=p1y+50*Math.sin(rad+30*Math.PI/180); c.lineTo(p2x,p2y);
@@ -249,7 +229,7 @@
 
     function addComando(t, v) { if(!executando){ som(300,0,0.05); if(loopTemporario) loopTemporario.comandos.push({t,v}); else algoritmo.push({t,v}); renderizarLista(); }}
     function abrirMenuLoop() { const v=prompt("Vezes?","4"); if(v){ loopTemporario={t:'loop', vezes:parseInt(v), comandos:[]}; document.getElementById('btn-fim').style.display='inline-block'; }}
-    function fecharLoop() { if(loopTemporario){ algoritmo.push(loopTemporario); loopTemporario=null; document.getElementById('btn-fim').style.display='none'; renderizarLista(); } renderizarLista();}
+    function fecharLoop() { if(loopTemporario){ algoritmo.push(loopTemporario); loopTemporario=null; document.getElementById('btn-fim').style.display='none'; } renderizarLista(); }
     function limparScript() { algoritmo=[]; loopTemporario=null; document.getElementById('btn-fim').style.display='none'; resetDesenho(); renderizarLista(); }
 
     function renderizarLista() {
@@ -258,7 +238,7 @@
             if(c.t==='loop'){ let h="<div style='background:#fff3e0;border-left:3px solid #e67e22;padding:2px;margin:2px'><b>Repetir "+c.vezes+"x</b>"; c.comandos.forEach(s=>h+="<div style='font-size:11px'>↳ "+s.t+" "+s.v+"</div>"); ui.innerHTML+=h+"</div>"; }
             else ui.innerHTML+="<div style='padding:2px;border-bottom:1px solid #eee'>"+c.t.toUpperCase()+" "+c.v+"</div>";
         });
-        ui.scrollTop = ui.scrollHeight; // Sempre rolar para o final
+        ui.scrollTop = ui.scrollHeight;
     }
 
     async function rodarAlgoritmo(lista=algoritmo) {
