@@ -49,6 +49,19 @@
         #lista-comandos { flex: 1; max-height: 120px; background: #fff; border-radius: 8px; padding: 10px; overflow-y: auto; border: 1px solid #bdc3c7; font-family: monospace; }
         
         option:disabled { color: #ccc; text-decoration: line-through; }
+
+        /* Estilo para a mini explicação */
+       .ajuda-rapida {
+           background: #fff;
+           border-left: 4px solid #f1c40f;
+           padding: 8px;
+           margin-bottom: 5px;
+           border-radius: 4px;
+           font-size: 11px;
+           line-height: 1.4;
+           color: #444;
+       }
+      .ajuda-rapida b { color: var(--dark); }
     </style>
 </head>
 <body>
@@ -83,6 +96,9 @@
         <option value="9" disabled>9. Escada 3D</option>
         <option value="10" disabled>10. Cubo Mestre</option>
     </select>
+    <div class="ajuda-rapida">
+        <b>Como Jogar:</b> Escolha um desafio, use os botões azuis para andar e amarelos para girar. Use o 🔁 <b>Loop</b> para repetir movimentos! Clique em ▶️ <b>Executar</b> para ver o robô desenhar.
+    </div>
 
     <div class="gaveta">
         <button class="bloco btn-mov" onclick="addComando('avancar', 80)">➡ 80</button>
